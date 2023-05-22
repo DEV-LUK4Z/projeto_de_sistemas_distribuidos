@@ -4,7 +4,7 @@ import pickle
 HOST = 'localhost'  # Endereço IP do servidor
 PORT = 50001  # Porta para conexão
 
-# Cria o socket do servidor
+# Cria o socket do servidor (IPV4 - TCP/IP)
 server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server_socket.bind((HOST, PORT))
 server_socket.listen(1)
