@@ -1,35 +1,35 @@
 import socket
 import pickle
+#import threading
 
-HOST = '127.0.0.1'  # Endereço IP do servidor
-PORT = 50001  # Porta para conexão
+def main():
+    client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-# Cria o socket do cliente
-client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-client_socket.connect((HOST, PORT))
-print("\nConectado ao servidor")
+    try:
+        client.connect(('localhost', 7777))
+        print("\nCONECTADO AO SERVIDOR!")
+    except:
+        return print("\nERRO DE CONEXÃO!")
 
-# Recebe a pergunta e as opções do servidor
-pergunta = client_socket.recv(1024).decode()
-opcoes = pickle.loads(client_socket.recv(1024))
+    while True:
+        try:
+            pergunta = pickle.loads(client.recv(1024))
+            if not pergunta:
+                break
+            else:
+                resposta = input(pergunta + "\nEscolha uma opção >> ")
+                client.send(resposta.encode())
 
-# Exibe a pergunta e as opções para o usuário
-print(pergunta)
-for opcao in opcoes:
-    print(opcao)
+                res_servidor = pickle.loads(client.recv(1024))
+                print(res_servidor)
+            
+            # Enviar confirmação para avançar para a próxima pergunta
+            client.send("confirmacao".encode())
+        except EOFError:
+            break
 
-# Solicita ao usuário a resposta
-resposta = int(input("\nDigite o número da opção correta >> "))
-client_socket.send(str(resposta).encode())
+    client.close()
+    print("\nQuizz Finalizado")
 
-# Recebe o resultado do servidor
-resultado = client_socket.recv(1024).decode()
-
-# Verifica se a resposta está incorreta e exibe a mensagem correspondente
-if resultado == "Resposta incorreta!":
-    print("\n",resultado)
-else:
-    print("\n",resultado)
-
-# Fecha a conexão
-client_socket.close()
+if __name__ == "__main__":
+    main()

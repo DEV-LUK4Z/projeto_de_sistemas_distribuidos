@@ -1,42 +1,51 @@
 import socket
 import pickle
+#import threading
 
-HOST = 'localhost'  # Endereço IP do servidor
-PORT = 50001  # Porta para conexão
+def main():
+    HOST = 'localhost'
+    PORT = 7777
 
-# Cria o socket do servidor (IPV4 - TCP/IP)
-server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-server_socket.bind((HOST, PORT))
-server_socket.listen(1)
+    server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server.bind((HOST, PORT))
+    server.listen()
+    print("\nAguardando Conexão...")
 
-print('\nAguardando conexão do cliente...')
+    try:
+        client, adrres = server.accept()
+        print(f'\nCLIENTE CONECTADO: {adrres}')
+    except:
+        return print("\nERRO DE CONEXÃO!")
 
-# Aceita a conexão do cliente
-client_socket, addr = server_socket.accept()
-print('Cliente conectado:', addr)
+    perguntas = [
+    ("Qual a capital do Brasil?", ["a) Brasília", "b) Castanhal", "c) Salvador", "d) Bélem"], "a"),
+    ("Qual é a capital da França?", ["a) Londres", "b) Paris", "c) Berlim", "d) Roma"], "b"),
+    ("Qual é a montanha mais alta do mundo?", ["a) Mont Blanc", "b) K2", "c) Everest", "d) Kilimanjaro"], "c"),
+    ("Qual é o maior planeta do sistema solar?", ["a) Terra", "b) Júpiter", "c) Saturno", "d) Netuno"], "b")
+    ]
+        
+    for pergunta, opcoes, resposta_correta in perguntas:
+        # Enviando a pergunta ao cliente
+        pergunta_enviada = "{0}\n{1}\n".format(pergunta, '\n'.join(opcoes))
+        client.send(pickle.dumps(pergunta_enviada))
 
-# Define a pergunta, as opções e a resposta correta
-pergunta = "Qual é a capital do Brasil?"
-opcoes = ["1 - Belém", "2 - Salvador", "3 - Brasília", "4 - Castanhal"]
-resposta_correta = 3
+        # Recebendo a resposta e verificando se está correta
+        res_cliente = client.recv(1024).decode().strip()
+        if res_cliente.lower() == resposta_correta:
+            print(f'Resposta correta: {res_cliente}')
+            res_servidor = "\nRESPOSTA CORRETA!\n" + ("-"*30)
+        else:
+            print(f'Resposta errada: {res_cliente}')
+            res_servidor = "\nRESPOSTA INCORRETA!\n" + ("-"*50)
 
-# Envia a pergunta e as opções para o cliente
-client_socket.send(pergunta.encode())
-client_socket.send(pickle.dumps(opcoes))
+        # Enviando o resultado ao cliente
+        client.send(pickle.dumps(res_servidor))
 
-# Recebe a resposta do cliente
-resposta_cliente = int(client_socket.recv(1024).decode())
-print(f'\nResposta do Cliente: {resposta_cliente}')
+        # Aguardar confirmação do cliente para avançar para a próxima pergunta
+        confirmacao = client.recv(1024).decode().strip()
 
-# Verifica se a resposta está correta
-if resposta_cliente == resposta_correta:
-    resultado = "RESPOSTA CORRETA!!"
-else:
-    resultado = "RESPOSTA INCORRETA!!"
+    client.close()
+    print("\nQuiz finalizado.")
 
-# Envia o resultado para o cliente
-client_socket.send(resultado.encode())
-
-# Fecha a conexão
-client_socket.close()
-server_socket.close()
+if __name__ == "__main__":
+    main()
