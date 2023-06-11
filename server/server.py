@@ -1,51 +1,44 @@
 import socket
 import pickle
-#import threading
 
-def main():
-    HOST = 'localhost'
-    PORT = 7777
+HOST = '127.0.0.1'
+PORT = 1234
 
-    server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server.bind((HOST, PORT))
-    server.listen()
-    print("\nAguardando Conexão...")
+server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+server_socket.bind((HOST, PORT))
+server_socket.listen()
 
-    try:
-        client, adrres = server.accept()
-        print(f'\nCLIENTE CONECTADO: {adrres}')
-    except:
-        return print("\nERRO DE CONEXÃO!")
+print('Aguardando conexão do cliente...')
 
-    perguntas = [
-    ("Qual a capital do Brasil?", ["a) Brasília", "b) Castanhal", "c) Salvador", "d) Bélem"], "a"),
-    ("Qual é a capital da França?", ["a) Londres", "b) Paris", "c) Berlim", "d) Roma"], "b"),
-    ("Qual é a montanha mais alta do mundo?", ["a) Mont Blanc", "b) K2", "c) Everest", "d) Kilimanjaro"], "c"),
-    ("Qual é o maior planeta do sistema solar?", ["a) Terra", "b) Júpiter", "c) Saturno", "d) Netuno"], "b")
-    ]
-        
-    for pergunta, opcoes, resposta_correta in perguntas:
-        # Enviando a pergunta ao cliente
-        pergunta_enviada = "{0}\n{1}\n".format(pergunta, '\n'.join(opcoes))
-        client.send(pickle.dumps(pergunta_enviada))
+client_socket, addr = server_socket.accept()
+print('Cliente conectado:', addr)
 
-        # Recebendo a resposta e verificando se está correta
-        res_cliente = client.recv(1024).decode().strip()
-        if res_cliente.lower() == resposta_correta:
-            print(f'Resposta correta: {res_cliente}')
-            res_servidor = "\nRESPOSTA CORRETA!\n" + ("-"*30)
-        else:
-            print(f'Resposta errada: {res_cliente}')
-            res_servidor = "\nRESPOSTA INCORRETA!\n" + ("-"*50)
+perguntas = [
+    ("Qual empresa lançou o primeiro processador?", ["1 - IBM", "2 - AMD", "3 - Intel", "4 - Motorola"], 3),
+    ("Qual foi o primeiro sistema de correio eletrônico?", ["1 - ARPANET Mail", "2 - Gmail", "3 - Hotmail", "4 - Yahoo Mail"], 1),
+    ("Qual é o nome da linguagem de programação desenvolvida pela Microsoft?", ["1 - Python", "2 - C++", "3 - Java", "4 - C#"], 4),
+    ("Qual é o protocolo de internet utilizado para acessar páginas web?", ["1 - FTP", "2 - HTTP", "3 - TCP", "4 - IP"], 2),
+    ("Qual é o nome da tecnologia que permite a conexão de dispositivos\n à internet por meio de ondas de rádio?", ["1 - Wi-Fi", "2 - Ethernet", "3 - Bluetooth", "4 - 3G/4G/5G"], 4),
+    ("Que ano foi lançado o Macintosh?", ["1 - 1980", "2 - 1982", "3 - 1984", "4 - 1986"], 3)
+]
+acertos = 0
 
-        # Enviando o resultado ao cliente
-        client.send(pickle.dumps(res_servidor))
+for pergunta, opcoes, resposta_correta in perguntas:
+    client_socket.send(pickle.dumps((pergunta, opcoes, False)))
 
-        # Aguardar confirmação do cliente para avançar para a próxima pergunta
-        confirmacao = client.recv(1024).decode().strip()
+    resposta_cliente = int(client_socket.recv(1024).decode())
 
-    client.close()
-    print("\nQuiz finalizado.")
+    if resposta_cliente == resposta_correta:
+        acertos += 1
+        client_socket.send('acertou'.encode())
+    else:
+        client_socket.send('errou'.encode())
+        break
 
-if __name__ == "__main__":
-    main()
+if acertos == 3:
+    client_socket.send(pickle.dumps(("Você acertou todas as perguntas!", [], True)))
+else:
+    client_socket.send(pickle.dumps(("Fim de Jogo", [], True)))
+
+client_socket.close()
+server_socket.close()
