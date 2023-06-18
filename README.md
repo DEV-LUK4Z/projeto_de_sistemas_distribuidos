@@ -8,5 +8,8 @@ Para utilizar o sistema, é precisa executar o arquivo server.py em um terminal 
 
 ### Autores
 
-https://github.com/assadlucas <br>
-https://github.com/DEV-LUK4Z
+Lucas Assad<br>
+Instagram: https://www.instagram.com/glucasassad/ <br>
+
+Lucas Santos<br>
+Instagram: https://www.instagram.com/lucas_santos.png/
