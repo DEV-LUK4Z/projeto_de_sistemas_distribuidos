@@ -8,5 +8,5 @@ Para utilizar o sistema, é precisa executar o arquivo server.py em um terminal 
 
 ### Autores
 
-https://github.com/assadlucas
+https://github.com/assadlucas <br>
 https://github.com/DEV-LUK4Z
